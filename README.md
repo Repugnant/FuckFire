@@ -9,7 +9,7 @@ Clone this repository and use the package manager [pip](https://pip.pypa.io/en/s
 
 ```bash
 # Downloading
-git clone [URL]
+git clone git clone https://github.com/Repugnant/FuckFire/
 cd FuckFire/
 
 # Installing dependencies
