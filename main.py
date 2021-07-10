@@ -92,14 +92,17 @@ def main():
 
 	download_files_from_folder(URL, dir_)
 
-	for folder in is_there_folders(URL):
-		folder_url = folder["url"]
-		folder_name = folder["name"]
+	while is_there_folders(URL):
 
-		dir_ += f"{folder_name}/"
+		for folder in is_there_folders(URL):
+			folder_url = folder["url"]
+			folder_name = folder["name"]
 
-		download_files_from_folder(folder_url, dir_)
+			dir_ += f"{folder_name}/"
 
+			download_files_from_folder(folder_url, dir_)
+
+			URL = folder_url
 
 if __name__ == "__main__":
 	try:
