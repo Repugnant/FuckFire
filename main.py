@@ -6,6 +6,7 @@ import re
 from contextlib import suppress
 from pathlib import Path
 
+regex = re.compile(r"(https?:\/\/)?(www\.)?(mediafire\.com)\/(folder)\/([a-z0-9A-Z]*)\/?(.+)?")
 
 def parse_args():
 	parser = argparse.ArgumentParser(description="Procees input Url")
@@ -24,7 +25,6 @@ def is_there_folders(folder_url):
 
 	folders = []
 
-	regex = re.compile(r"(https?:\/\/)?(www\.)?(mediafire\.com)\/(folder)\/([a-z,1-9,A-Z]*)\/?(.+)?")
 	folder_key = regex.match(folder_url)[5]
 	API_FOLDER_REQUEST = f"https://www.mediafire.com/api/1.4/folder/get_content.php?r=tnuc&content_type=all&filter=all&order_by=name&order_direction=asc&chunk=1&version=1.5&folder_key={folder_key}&response_format=json"
 
@@ -50,7 +50,6 @@ def is_there_folders(folder_url):
 def download_files_from_folder(folder_url, dir_):
 	""" Download all files from a folder """
 
-	regex = re.compile(r"(https?:\/\/)?(www\.)?(mediafire\.com)\/(folder)\/([a-z,1-9,A-Z]*)\/?(.+)?")
 	folder_key = regex.match(folder_url)[5]
 	API_FILES_REQUEST = f"https://www.mediafire.com/api/1.4/folder/get_content.php?r=tnuc&content_type=files&filter=all&order_by=name&order_direction=asc&chunk=1&version=1.5&folder_key={folder_key}&response_format=json"
 
@@ -90,7 +89,6 @@ def download_files_from_folder(folder_url, dir_):
 
 def main():
 	URL = parse_args()
-	regex = re.compile(r"(https?:\/\/)?(www\.)?(mediafire\.com)\/(folder)\/([a-z,1-9,A-Z]*)\/?(.+)?")
 	folder = regex.match(URL)
 	if (folder is None):
 		print("[-] Invalid URL")
