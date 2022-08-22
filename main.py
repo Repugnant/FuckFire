@@ -86,11 +86,17 @@ def download_files_from_folder(folder_url, dir_):
 
 		print(f"[+] File: '{file_name}' Downloaded.")
 
+def download_folders(folder_url, dir_):
+	for folder in is_there_folders(folder_url):
+		folder_url = folder["url"]
+		folder_name = folder["name"]
+		download_files_from_folder(folder_url, f"{dir_}/{folder_name}")
+		download_folders(folder_url, f"{dir_}/{folder_name}")
 
 def main():
 	URL = parse_args()
 	folder = regex.match(URL)
-	if (folder is None):
+	if folder is None:
 		print("[-] Invalid URL")
 		return
 
@@ -98,18 +104,7 @@ def main():
 	dir_ = f"{getcwd()}/downloads/{folder_key}"
 
 	download_files_from_folder(URL, dir_)
-
-	while is_there_folders(URL):
-
-		for folder in is_there_folders(URL):
-			folder_url = folder["url"]
-			folder_name = folder["name"]
-
-			dir_ += f"{folder_name}/"
-
-			download_files_from_folder(folder_url, dir_)
-
-			URL = folder_url
+	download_folders(URL, dir_)
 
 if __name__ == "__main__":
 	try:
