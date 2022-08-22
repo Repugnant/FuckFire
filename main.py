@@ -1,8 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
-from os import chdir, mkdir, getcwd
+from os import mkdir, getcwd
 import argparse
+import re
+from contextlib import suppress
+from pathlib import Path
 
+regex = re.compile(r"(https?:\/\/)?(www\.)?(mediafire\.com)\/(folder)\/([a-z0-9A-Z]*)\/?(.+)?")
 
 def parse_args():
 	parser = argparse.ArgumentParser(description="Procees input Url")
@@ -21,7 +25,7 @@ def is_there_folders(folder_url):
 
 	folders = []
 
-	folder_key = folder_url.split("/")[4]
+	folder_key = regex.match(folder_url)[5]
 	API_FOLDER_REQUEST = f"https://www.mediafire.com/api/1.4/folder/get_content.php?r=tnuc&content_type=all&filter=all&order_by=name&order_direction=asc&chunk=1&version=1.5&folder_key={folder_key}&response_format=json"
 
 	# Making requests
@@ -46,7 +50,7 @@ def is_there_folders(folder_url):
 def download_files_from_folder(folder_url, dir_):
 	""" Download all files from a folder """
 
-	folder_key = folder_url.split("/")[4]
+	folder_key = regex.match(folder_url)[5]
 	API_FILES_REQUEST = f"https://www.mediafire.com/api/1.4/folder/get_content.php?r=tnuc&content_type=files&filter=all&order_by=name&order_direction=asc&chunk=1&version=1.5&folder_key={folder_key}&response_format=json"
 
 	# Making requests
@@ -54,13 +58,10 @@ def download_files_from_folder(folder_url, dir_):
 	r_json = r.json()
 	
 	# Making dir
-	try:
-		mkdir(dir_)
-
-		print(f"[+] Folder: '{dir_}' created.")
-
-	except FileExistsError:
-		pass
+	with suppress(FileExistsError):
+		path = Path(dir_)
+		path.mkdir(parents=True, exist_ok=False)
+		print(f"[+] Folder: '{path.absolute()}' created.")
 
 	# Downloading files
 	for file in r_json["response"]["folder_content"]["files"]:
@@ -85,24 +86,25 @@ def download_files_from_folder(folder_url, dir_):
 
 		print(f"[+] File: '{file_name}' Downloaded.")
 
+def download_folders(folder_url, dir_):
+	for folder in is_there_folders(folder_url):
+		folder_url = folder["url"]
+		folder_name = folder["name"]
+		download_files_from_folder(folder_url, f"{dir_}/{folder_name}")
+		download_folders(folder_url, f"{dir_}/{folder_name}")
 
 def main():
 	URL = parse_args()
-	dir_ = getcwd() + "/downloads/"
+	folder = regex.match(URL)
+	if folder is None:
+		print("[-] Invalid URL")
+		return
+
+	folder_key = folder[5]
+	dir_ = f"{getcwd()}/downloads/{folder_key}"
 
 	download_files_from_folder(URL, dir_)
-
-	while is_there_folders(URL):
-
-		for folder in is_there_folders(URL):
-			folder_url = folder["url"]
-			folder_name = folder["name"]
-
-			dir_ += f"{folder_name}/"
-
-			download_files_from_folder(folder_url, dir_)
-
-			URL = folder_url
+	download_folders(URL, dir_)
 
 if __name__ == "__main__":
 	try:
